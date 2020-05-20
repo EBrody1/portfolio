@@ -3,12 +3,14 @@
 Created on Wed May 20 16:16:35 2020
 
 @author: brody
+Code to grab data from Daily Treasury Statement extract 2 items of interest and reformat into excel and then csv which feeds a power bi 
+dashboard.  The dash updates automatically from one drive once the csv is updated.  The script runs automatically using windows task 
+scheduler so the dashbaord is automatically updated daily.  On weekends there is no new data so the code will not find a file and exit. 
 """
 
 import pandas as pd
-#import numpy as np
+import sys
 from openpyxl import load_workbook
-#import datetime
 from datetime import date, timedelta
 # calculate today's date and then the target of treasury report which is 2 or
 # 4 days behind depending on weekends
@@ -28,7 +30,10 @@ head = 'https://fsapps.fiscal.treasury.gov/dts/files/'
 url = head+ext
 
 # grab daily report to add to the records
-df = pd.read_excel(url)
+try:
+    df = pd.read_excel(url)
+except:
+    sys.exit()
 
 # extract the date
 d = df.columns[0]
@@ -127,7 +132,7 @@ cs.to_csv('Withheld.csv')
 
 df = pd.read_excel('ESF.xlsx')
 
-# in convert  strings into date object
+# convert strings into date object
 df['Date'] = pd.to_datetime(df['Date'])
 
 # sort
