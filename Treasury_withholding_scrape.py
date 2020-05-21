@@ -9,19 +9,68 @@ scheduler so the dashbaord is automatically updated daily.  On weekends there is
 """
 
 import pandas as pd
-import sys
+import numpy as np
 from openpyxl import load_workbook
 from datetime import date, timedelta
-# calculate today's date and then the target of treasury report which is 2 or
-# 4 days behind depending on weekends
+import holidays
+import sys
+
+# find todays date and dict of holidays
 today = date.today() 
-day = today.strftime('%A')
-if day == 'Monday' or day == "Tuesday":
-    Target = today - timedelta(days=4)
+hol = holidays.UnitedStates(years= today.year).keys()
+day = today.strftime('%A') # get day of week for today
+
+# find if holiday with in last 2  bussiness days which delays release of treasury data
+if today in hol:
+    sys.exit()  # no new data available today
+elif today - timedelta(days=3) in hol and day == 'Monday':
+    dayhol = (today - timedelta(days=3)).strftime('%A')# day of the week of the holiday
+    delay = 1
+elif today - timedelta(days=4) in hol and day == 'Tuesday':
+    dayhol = (today - timedelta(days=4)).strftime('%A')
+    delay = 1
+elif today - timedelta(days=4) in hol and day == 'Monday':
+    dayhol = (today - timedelta(days=4)).strftime('%A')
+    delay = 1
+elif today - timedelta(days=1) in hol: # yesterday was holiday
+    dayhol = (today - timedelta(days=1)).strftime('%A') 
+    delay = 1 
+elif today - timedelta(days=2) in hol:
+    dayhol = (today - timedelta(days=2)).strftime('%A')
+    delay = 1
 else:
-    Target = today - timedelta(days=2)
+    delay = 0 
+
+# on weekends 
+if not np.is_busday(today):
+    sys.exit()  # no new data available today
+
+# if no recent holidays calculate which days treasury data is availble on Mon and Tues report is from before the weekend
+if delay == 0:
+    if day == 'Monday' or day == "Tuesday":
+        Target = today - timedelta(days=4)
+    else:
+        Target = today - timedelta(days=2)
+# if there was a recent holiday there is a delay in which report is availble depending on how weekends fall out
+else:
+    if dayhol ==  'Monday' or dayhol == "Friday":
+        Target = today - timedelta(days=5)
+    elif dayhol == "Tuesday":
+        if day == 'Wednesday':
+            Target = today - timedelta(days=5)
+        else:
+            Target = today - timedelta(days=3)
+    elif dayhol == 'Wednesday':
+        Target = today - timedelta(days=3)
+    else:
+        if day == 'Friday':
+            Target = today - timedelta(days=3)
+        else:
+            Target = today - timedelta(days=5)
+
 targ = Target.strftime("%m/%d/%y")
-# format the url of the xlsx file
+
+# figure out the url extension for the new treasury report availble based on the date
 yr = targ.split('/')[2]
 d = targ.split('/')[1]
 mon = targ.split('/')[0]
