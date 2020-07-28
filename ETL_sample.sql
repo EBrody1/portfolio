@@ -35,7 +35,7 @@ SELECT  A.BU_Designation, ',' AS comma,
 FROM business_unit AS A
 INNER JOIN  product_bu AS B
       ON A.BU_Name = B.BU_Name
-# bring 2012 csv data only entries that match procut name of product bu table and line up those matches
+# bring 2012 csv data only entries that match product name of product bu table and line up those matches
 INNER JOIN  2012pd AS c
       ON B.Product_Name = C.Product
 # exclude bu designation decline and filter results to year 2012
